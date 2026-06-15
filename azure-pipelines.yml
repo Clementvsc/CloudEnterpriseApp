@@ -1,0 +1,59 @@
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - CloudEnterpriseApp.Web/*
+      - CloudEnterpriseApp.Tests/*
+      - azure-pipelines.yml         
+    exclude:
+      - README.md                   
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  buildConfiguration: 'Release'
+  dotNetVersion: '8.x'
+
+stages:
+- stage: BuildAndTest
+  displayName: 'Continuous Integration Stage'
+  jobs:
+  - job: CompileAndValidate
+    displayName: 'Agent Compilation Loop'
+    steps:
+    - task: UseDotNet@2
+      displayName: 'Provision .NET SDK $(dotNetVersion)'
+      inputs:
+        version: '$(dotNetVersion)'
+        packageType: 'sdk'
+
+    - script: dotnet restore CloudEnterpriseApp.sln
+      displayName: 'Restore NuGet Packages'
+
+    - script: dotnet build CloudEnterpriseApp.sln --configuration $(buildConfiguration) --no-restore
+      displayName: 'Compile Binary Project Targets'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Execute Automated Unit Tests'
+      inputs:
+        command: 'test'
+        projects: '**/*Tests/*.csproj'
+        arguments: '--configuration $(buildConfiguration) --no-build'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Package Executable Application'
+      inputs:
+        command: 'publish'
+        publishWebProjects: true
+        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+        zipAfterPublish: true
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Archive Zip Package'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'drop'
+        publishLocation: 'Container'

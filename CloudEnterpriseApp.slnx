@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="CloudEnterpriseApp.Tests/CloudEnterpriseApp.Tests.csproj" />
+  <Project Path="CloudEnterpriseApp.Web/CloudEnterpriseApp.Web.csproj" />
+</Solution>
