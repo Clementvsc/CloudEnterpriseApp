@@ -7,7 +7,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  # UPDATE THIS with your actual Azure Service Connection Name from DevOps!
+  # UPDATE THIS with your actual Azure Service Connection Name!
   azureSubscription: 'azure-service-connection' 
   buildConfiguration: 'Release'
   dotNetVersion: '8.x'
@@ -18,10 +18,10 @@ variables:
 
 stages:
 # ==========================================
-# CONTINUOUS INTEGRATION (CI) STAGE
+# CI STAGE: Compile & Package
 # ==========================================
 - stage: BuildAndTest
-  displayName: 'Full Stack CI Stage'
+  displayName: 'CI: Build & Test'
   jobs:
   - job: CompileAll
     displayName: 'Compile React & .NET'
@@ -29,49 +29,47 @@ stages:
     
     # 1. FRONTEND BUILD
     - task: NodeTool@0
-      displayName: 'Provision Node.js $(nodeVersion)'
-      inputs:
-        versionSpec: '$(nodeVersion)'
+      inputs: { versionSpec: '$(nodeVersion)' }
 
     - script: |
         npm install
         npm run build
-      displayName: 'Compile React SPA'
       workingDirectory: 'frontend-react'
+      displayName: 'Compile React SPA'
 
     # 2. BACKEND BUILD
     - task: UseDotNet@2
-      displayName: 'Provision .NET SDK $(dotNetVersion)'
-      inputs:
-        version: '$(dotNetVersion)'
+      inputs: { version: '$(dotNetVersion)' }
 
-    - script: dotnet restore CloudEnterpriseApp.slnx
+    - script: dotnet restore CloudEnterpriseApp.Web/CloudEnterpriseApp.Web.csproj
       displayName: 'Restore .NET Packages'
 
-    - script: dotnet build CloudEnterpriseApp.slnx --configuration $(buildConfiguration) --no-restore
-      displayName: 'Build .NET Core Solution'
+    - script: dotnet build CloudEnterpriseApp.Web/CloudEnterpriseApp.Web.csproj --configuration $(buildConfiguration) --no-restore
+      displayName: 'Build .NET API'
 
-    # 3. THE MERGE: Move React files into .NET before publishing
+    - script: dotnet test CloudEnterpriseApp.Tests/CloudEnterpriseApp.Tests.csproj --configuration $(buildConfiguration) --no-build
+      displayName: 'Run Unit Tests'
+
+    # 3. MERGE
     - script: |
         mkdir -p CloudEnterpriseApp.Web/wwwroot
         cp -r frontend-react/dist/* CloudEnterpriseApp.Web/wwwroot/
-      displayName: 'Merge Frontend into Backend (wwwroot)'
+      displayName: 'Merge Frontend into Backend'
 
-    # 4. PACKAGE EVERYTHING
+    # 4. PACKAGE
     - script: dotnet publish CloudEnterpriseApp.Web/CloudEnterpriseApp.Web.csproj --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)
       displayName: 'Publish Unified Artifact'
 
     - task: PublishPipelineArtifact@1
-      displayName: 'Archive Package for Deployment'
       inputs:
         targetPath: '$(Build.ArtifactStagingDirectory)'
         artifact: 'drop'
 
 # ==========================================
-# CONTINUOUS DELIVERY (CD) STAGES
+# CD STAGES: Deployment
 # ==========================================
 - stage: DeployDev
-  displayName: 'CD Stage: DEV Environment'
+  displayName: 'CD: Deploy to DEV'
   dependsOn: BuildAndTest
   jobs:
   - deployment: Dev
@@ -88,7 +86,7 @@ stages:
               package: '$(Pipeline.Workspace)/drop/**/*.zip'
 
 - stage: DeployStaging
-  displayName: 'CD Stage: STAGING Environment'
+  displayName: 'CD: Deploy to STAGING'
   dependsOn: DeployDev
   jobs:
   - deployment: Staging
@@ -105,11 +103,11 @@ stages:
               package: '$(Pipeline.Workspace)/drop/**/*.zip'
 
 - stage: DeployProd
-  displayName: 'CD Stage: PRODUCTION Environment'
+  displayName: 'CD: Deploy to PRODUCTION'
   dependsOn: DeployStaging
   jobs:
   - deployment: Production
-    environment: 'Production' # Triggers the manual approval UI gate in Azure DevOps
+    environment: 'Production'
     strategy:
       runOnce:
         deploy:
