@@ -107,3 +107,4 @@ C:\Users\cleme\projects\CloudEnterpriseApp\CloudEnterpriseApp.Web\obj\Debug\net1
 C:\Users\cleme\projects\CloudEnterpriseApp\CloudEnterpriseApp.Web\obj\Debug\net10.0\CloudEnterpriseApp.Web.pdb
 C:\Users\cleme\projects\CloudEnterpriseApp\CloudEnterpriseApp.Web\obj\Debug\net10.0\CloudEnterpriseApp.Web.genruntimeconfig.cache
 C:\Users\cleme\projects\CloudEnterpriseApp\CloudEnterpriseApp.Web\obj\Debug\net10.0\ref\CloudEnterpriseApp.Web.dll
+C:\Users\cleme\projects\CloudEnterpriseApp\CloudEnterpriseApp.Web\obj\Debug\net10.0\CloudEnterpriseApp.Web.sourcelink.json

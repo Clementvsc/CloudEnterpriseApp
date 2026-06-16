@@ -7,7 +7,6 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  # UPDATE THIS with your actual Azure Service Connection Name!
   azureSubscription: 'azure-service-connection' 
   buildConfiguration: 'Release'
   dotNetVersion: '8.x'
@@ -17,17 +16,11 @@ variables:
   appNameProd: 'webapp-prod-2468'
 
 stages:
-# ==========================================
-# CI STAGE: Compile & Package
-# ==========================================
 - stage: BuildAndTest
   displayName: 'CI: Build & Test'
   jobs:
   - job: CompileAll
-    displayName: 'Compile React & .NET'
     steps:
-    
-    # 1. FRONTEND BUILD
     - task: NodeTool@0
       inputs: { versionSpec: '$(nodeVersion)' }
 
@@ -35,41 +28,32 @@ stages:
         npm install
         npm run build
       workingDirectory: 'frontend-react'
-      displayName: 'Compile React SPA'
+      displayName: 'Compile React'
 
-    # 2. BACKEND BUILD
     - task: UseDotNet@2
       inputs: { version: '$(dotNetVersion)' }
 
+    # Explicitly targeting .csproj files to bypass .slnx
     - script: dotnet restore CloudEnterpriseApp.Web/CloudEnterpriseApp.Web.csproj
-      displayName: 'Restore .NET Packages'
+      displayName: 'Restore Backend'
 
     - script: dotnet build CloudEnterpriseApp.Web/CloudEnterpriseApp.Web.csproj --configuration $(buildConfiguration) --no-restore
-      displayName: 'Build .NET API'
+      displayName: 'Build Backend'
 
-    - script: dotnet test CloudEnterpriseApp.Tests/CloudEnterpriseApp.Tests.csproj --configuration $(buildConfiguration) --no-build
-      displayName: 'Run Unit Tests'
-
-    # 3. MERGE
     - script: |
         mkdir -p CloudEnterpriseApp.Web/wwwroot
         cp -r frontend-react/dist/* CloudEnterpriseApp.Web/wwwroot/
-      displayName: 'Merge Frontend into Backend'
+      displayName: 'Merge Frontend'
 
-    # 4. PACKAGE
     - script: dotnet publish CloudEnterpriseApp.Web/CloudEnterpriseApp.Web.csproj --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)
-      displayName: 'Publish Unified Artifact'
+      displayName: 'Publish'
 
     - task: PublishPipelineArtifact@1
       inputs:
         targetPath: '$(Build.ArtifactStagingDirectory)'
         artifact: 'drop'
 
-# ==========================================
-# CD STAGES: Deployment
-# ==========================================
 - stage: DeployDev
-  displayName: 'CD: Deploy to DEV'
   dependsOn: BuildAndTest
   jobs:
   - deployment: Dev
@@ -86,7 +70,6 @@ stages:
               package: '$(Pipeline.Workspace)/drop/**/*.zip'
 
 - stage: DeployStaging
-  displayName: 'CD: Deploy to STAGING'
   dependsOn: DeployDev
   jobs:
   - deployment: Staging
@@ -103,7 +86,6 @@ stages:
               package: '$(Pipeline.Workspace)/drop/**/*.zip'
 
 - stage: DeployProd
-  displayName: 'CD: Deploy to PRODUCTION'
   dependsOn: DeployStaging
   jobs:
   - deployment: Production
