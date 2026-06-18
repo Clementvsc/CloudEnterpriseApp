@@ -1,78 +1,100 @@
+/* --- Global & Container --- */
 .app-container {
   font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  max-width: 1000px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 20px;
-  background-color: #f8f9fa;
+  padding: 30px 20px;
   min-height: 100vh;
 }
 
+/* --- Header Section --- */
 .app-header {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 50px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid; /* Highlights the header division */
 }
 
 .app-header h1 {
-  color: #2b3452;
-  font-size: 2.5rem;
+  font-size: 2.8rem;
   margin-bottom: 10px;
 }
 
-.environment-badge {
+.environment-label {
   display: inline-block;
-  background-color: #10b981;
-  color: white;
-  padding: 5px 12px;
+  padding: 6px 14px;
   border-radius: 20px;
   font-size: 0.85rem;
   font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* --- Search Controls --- */
+.search-container {
+  max-width: 600px;
+  margin: 0 auto 40px auto;
 }
 
 .search-input {
   width: 100%;
-  max-width: 500px;
-  padding: 15px 20px;
-  font-size: 1.1rem;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
+  padding: 18px 25px;
+  font-size: 1.2rem;
+  border: 2px solid;
+  border-radius: 10px;
   outline: none;
-  transition: border-color 0.3s ease;
-  margin: 0 auto 30px auto;
-  display: block;
+  transition: all 0.3s ease;
 }
 
-.search-input:focus {
-  border-color: #3b82f6;
-}
-
+/* --- Word Cards Grid --- */
 .grid-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 25px;
 }
 
 .word-card {
-  background: white;
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  border-top: 4px solid #3b82f6;
+  padding: 30px;
+  border-radius: 15px;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  flex-direction: column;
 }
 
-.word-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+/* --- Card Details --- */
+.word-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
 }
 
-.word-card h3 {
-  margin: 0 0 10px 0;
-  color: #1e293b;
-  font-size: 1.4rem;
-}
-
-.word-card p {
-  color: #64748b;
-  line-height: 1.6;
+.word-header h3 {
+  font-size: 1.6rem;
   margin: 0;
+}
+
+.part-of-speech {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  opacity: 0.7;
+}
+
+.definition {
+  line-height: 1.7;
+  flex-grow: 1; /* Pushes footer to bottom */
+  margin-bottom: 20px;
+}
+
+.card-footer {
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+
+/* --- Status Banners (Loading/Error/Info) --- */
+.status-banner {
+  padding: 20px 25px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+  font-family: 'Courier New', monospace;
+  border-left: 5px solid;
 }
