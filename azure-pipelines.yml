@@ -15,7 +15,7 @@ stages:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-    # 1. Compile React Frontend (Using Node 22.x for Vite compatibility)
+    # 1. Compile React Frontend (Node 22.x for Vite)
     - task: NodeTool@0
       inputs:
         versionSpec: '22.x'
@@ -25,15 +25,15 @@ stages:
       workingDirectory: 'frontend-react'
       displayName: 'Compile React SPA'
 
-    # 2. Execute xUnit Unit Tests (Path points exactly to your test folder)
+    # 2. Execute xUnit Unit Tests (Explicit Path to prevent wildcard failures)
     - task: DotNetCoreCLI@2
       inputs:
         command: 'test'
-        projects: 'CloudEnterpriseApp.Tests/**/*.csproj'
+        projects: 'CloudEnterpriseApp.Tests/CloudEnterpriseApp.Tests.csproj'
         arguments: '--configuration Release'
       displayName: 'Run Unit Tests (xUnit)'
 
-    # 3. Publish .NET Backend (Zipping disabled so React assets can merge)
+    # 3. Publish .NET Backend (Zipping disabled so React can merge)
     - task: DotNetCoreCLI@2
       inputs:
         command: 'publish'
