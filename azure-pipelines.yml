@@ -15,6 +15,7 @@ stages:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
+    # 1. Compile React Frontend (Using Node 22.x for Vite compatibility)
     - task: NodeTool@0
       inputs:
         versionSpec: '22.x'
@@ -24,26 +25,32 @@ stages:
       workingDirectory: 'frontend-react'
       displayName: 'Compile React SPA'
 
+    # 2. Execute xUnit Unit Tests (Path points exactly to your test folder)
     - task: DotNetCoreCLI@2
       inputs:
         command: 'test'
-        projects: '**/*Tests/*.csproj'
+        projects: 'CloudEnterpriseApp.Tests/**/*.csproj'
         arguments: '--configuration Release'
       displayName: 'Run Unit Tests (xUnit)'
 
+    # 3. Publish .NET Backend (Zipping disabled so React assets can merge)
     - task: DotNetCoreCLI@2
       inputs:
         command: 'publish'
         publishWebProjects: true
         arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)/drop'
+        zipAfterPublish: false
+        modifyOutputPath: false
       displayName: 'Publish .NET Backend'
 
+    # 4. Merge Frontend into Backend wwwroot
     - task: CopyFiles@2
       inputs:
         SourceFolder: 'frontend-react/dist'
         TargetFolder: '$(Build.ArtifactStagingDirectory)/drop/wwwroot'
       displayName: 'Merge React into .NET wwwroot'
 
+    # 5. Generate Immutable Artifact
     - publish: '$(Build.ArtifactStagingDirectory)/drop'
       artifact: drop
 
@@ -90,7 +97,7 @@ stages:
   dependsOn: DeployStaging
   jobs:
   - deployment: Deploy
-    environment: 'Production'
+    environment: 'Production' 
     pool:
       vmImage: 'ubuntu-latest'
     strategy:
