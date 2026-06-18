@@ -67,8 +67,7 @@ stages:
               azureSubscription: '$(azureSubscription)'
               appType: 'webAppLinux'
               appName: '$(appNameDev)'
-              package: '$(Pipeline.Workspace)/drop/**/*.zip'
-
+              package: '$(Pipeline.Workspace)/drop'
 - stage: DeployStaging
   dependsOn: DeployDev
   jobs:
@@ -83,7 +82,7 @@ stages:
               azureSubscription: '$(azureSubscription)'
               appType: 'webAppLinux'
               appName: '$(appNameStaging)'
-              package: '$(Pipeline.Workspace)/drop/**/*.zip'
+              package: '$(Pipeline.Workspace)/drop'
 
 - stage: DeployProd
   dependsOn: DeployStaging
@@ -99,4 +98,4 @@ stages:
               azureSubscription: '$(azureSubscription)'
               appType: 'webAppLinux'
               appName: '$(appNameProd)'
-              package: '$(Pipeline.Workspace)/drop/**/*.zip'
+              package: '$(Pipeline.Workspace)/drop'
