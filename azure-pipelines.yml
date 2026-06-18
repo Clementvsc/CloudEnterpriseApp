@@ -33,7 +33,7 @@ stages:
     - task: UseDotNet@2
       inputs: { version: '$(dotNetVersion)' }
 
-    # Explicitly targeting .csproj files to bypass .slnx
+
     - script: dotnet restore CloudEnterpriseApp.Web/CloudEnterpriseApp.Web.csproj
       displayName: 'Restore Backend'
 
@@ -65,7 +65,7 @@ stages:
           - task: AzureWebApp@1
             inputs:
               azureSubscription: '$(azureSubscription)'
-              appType: 'webApp'
+              appType: 'webAppLinux'
               appName: '$(appNameDev)'
               package: '$(Pipeline.Workspace)/drop/**/*.zip'
 
@@ -81,7 +81,7 @@ stages:
           - task: AzureWebApp@1
             inputs:
               azureSubscription: '$(azureSubscription)'
-              appType: 'webApp'
+              appType: 'webAppLinux'
               appName: '$(appNameStaging)'
               package: '$(Pipeline.Workspace)/drop/**/*.zip'
 
@@ -97,6 +97,6 @@ stages:
           - task: AzureWebApp@1
             inputs:
               azureSubscription: '$(azureSubscription)'
-              appType: 'webApp'
+              appType: 'webAppLinux'
               appName: '$(appNameProd)'
               package: '$(Pipeline.Workspace)/drop/**/*.zip'
