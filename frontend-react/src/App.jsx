@@ -38,7 +38,6 @@ export default function DictionaryApp() {
     }
   };
 
-  // Helper to find the first available audio pronunciation in the API data
   const audioUrl = wordData?.phonetics?.find(p => p.audio && p.audio.length > 0)?.audio;
 
   const playAudio = () => {
@@ -49,37 +48,39 @@ export default function DictionaryApp() {
 
   return (
     <div className="app-layout">
-      <div className="background-glow"></div>
-      
       <div className="main-container">
-        <header className="header-section fade-in">
-          <div className="badge">Production Environment</div>
-          <h1>Lexicon API</h1>
-          <p>Enterprise vocabulary routing and resolution.</p>
-        </header>
+        
+        {/* NEW: Sticky Header Wrapper */}
+        <div className="sticky-header">
+          <header className="header-section fade-in">
+            <div className="badge">Production Environment</div>
+            <h1>Lexicon API</h1>
+            <p>Enterprise vocabulary routing and resolution.</p>
+          </header>
 
-        <form onSubmit={handleSearch} className="search-bar-wrapper fade-in-up">
-          <input 
-            type="text" 
-            placeholder="Search for a cloud concept, IT term, or any word..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-            autoComplete="off"
-          />
-          <button type="submit" className={`search-button ${loading ? 'loading-btn' : ''}`} disabled={loading}>
-            {loading ? <span className="spinner"></span> : "Search"}
-          </button>
-        </form>
+          <form onSubmit={handleSearch} className="search-bar-wrapper fade-in-up">
+            <input 
+              type="text" 
+              placeholder="Search for a cloud concept, IT term, or any word..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+              autoComplete="off"
+            />
+            <button type="submit" className={`search-button ${loading ? 'loading-btn' : ''}`} disabled={loading}>
+              {loading ? <span className="spinner"></span> : "Search"}
+            </button>
+          </form>
 
-        {/* Error State */}
-        {errorStatus && (
-          <div className="alert-box error fade-in-up">
-            <span className="icon">⚠️</span> {errorStatus}
-          </div>
-        )}
+          {/* Error State moved into sticky area so it remains visible */}
+          {errorStatus && (
+            <div className="alert-box error fade-in-up">
+              <span className="icon">⚠️</span> {errorStatus}
+            </div>
+          )}
+        </div>
 
-        {/* Results State */}
+        {/* Results State (Scrolls under the sticky header) */}
         {!loading && !errorStatus && wordData && (
           <div className="results-card slide-up">
             <div className="word-header">

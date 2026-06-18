@@ -2,13 +2,13 @@
 :root {
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
-  --bg-color: #f8fafc;
-  --card-bg: rgba(255, 255, 255, 0.95);
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --border: #e2e8f0;
+  --bg-gradient: linear-gradient(135deg, #e2e8f0 0%, #c7d2fe 100%); /* New solid background colors */
+  --card-bg: rgba(255, 255, 255, 1); /* Solid white card for better text contrast */
+  --text-main: #020617; /* Darkened for maximum visibility */
+  --text-muted: #334155; /* Darkened for better reading */
+  --border: #cbd5e1;
   --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
 }
 
 * { box-sizing: border-box; }
@@ -16,31 +16,19 @@
 body {
   margin: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: var(--bg-color);
+  background: var(--bg-gradient);
   color: var(--text-main);
   overflow-x: hidden;
 }
 
-/* --- Layout & Background --- */
+/* --- Layout --- */
 .app-layout {
   position: relative;
   min-height: 100vh;
   display: flex;
   justify-content: center;
-  padding: 60px 20px;
-}
-
-/* Modern Soft Glow Background */
-.background-glow {
-  position: fixed;
-  top: -150px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(37,99,235,0.15) 0%, rgba(248,250,252,0) 70%);
-  z-index: -1;
-  border-radius: 50%;
+  /* Removed top padding because the sticky header handles it */
+  padding: 0 20px 60px 20px; 
 }
 
 .main-container {
@@ -49,10 +37,23 @@ body {
   z-index: 1;
 }
 
+/* --- NEW: Sticky Header (Makes text hide behind it) --- */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  /* High opacity white with a blur so scrolling text vanishes behind it cleanly */
+  background: rgba(255, 255, 255, 0.92); 
+  backdrop-filter: blur(12px);
+  z-index: 50;
+  padding: 40px 20px 20px 20px;
+  margin: 0 -20px 30px -20px; /* Counteracts container padding to span full width of the column */
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
 /* --- Header Section --- */
 .header-section {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 30px;
 }
 
 .badge {
@@ -61,8 +62,8 @@ body {
   color: #166534;
   padding: 4px 12px;
   border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.8rem;
+  font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   margin-bottom: 15px;
@@ -72,12 +73,13 @@ body {
   font-size: 3rem;
   font-weight: 800;
   margin: 0 0 10px 0;
-  letter-spacing: -1px;
+  color: #0f172a;
 }
 
 .header-section p {
   color: var(--text-muted);
   font-size: 1.1rem;
+  font-weight: 500;
   margin: 0;
 }
 
@@ -85,18 +87,17 @@ body {
 .search-bar-wrapper {
   display: flex;
   gap: 12px;
-  margin-bottom: 40px;
   background: white;
   padding: 10px;
   border-radius: 16px;
   box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border);
-  transition: box-shadow 0.3s ease;
+  border: 2px solid var(--border);
+  transition: all 0.3s ease;
 }
 
 .search-bar-wrapper:focus-within {
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
   border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
 }
 
 .search-input {
@@ -107,6 +108,7 @@ body {
   font-size: 1.1rem;
   outline: none;
   color: var(--text-main);
+  font-weight: 500;
 }
 
 .search-button {
@@ -151,7 +153,6 @@ body {
 /* --- Results Card --- */
 .results-card {
   background: var(--card-bg);
-  backdrop-filter: blur(10px);
   border-radius: 24px;
   padding: 40px;
   box-shadow: var(--shadow-lg);
@@ -171,14 +172,14 @@ body {
   font-size: 3rem;
   margin: 0 0 5px 0;
   text-transform: capitalize;
-  letter-spacing: -1px;
+  color: #0f172a;
 }
 
 .phonetic {
   color: var(--primary);
   font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 1.2rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .audio-button {
@@ -187,7 +188,7 @@ body {
   padding: 10px 20px;
   border-radius: 30px;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-main);
   transition: all 0.2s ease;
 }
@@ -206,9 +207,9 @@ body {
 
 .pos-badge {
   display: inline-block;
-  background: #334155;
+  background: #1e293b;
   color: white;
-  padding: 5px 15px;
+  padding: 6px 16px;
   border-radius: 8px;
   font-weight: 600;
   font-size: 0.9rem;
@@ -229,13 +230,14 @@ body {
 
 .definitions li::marker {
   color: var(--primary);
-  font-weight: bold;
+  font-weight: 800;
 }
 
 .def-text {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   line-height: 1.6;
   margin: 0 0 8px 0;
+  font-weight: 500;
 }
 
 .def-example {
@@ -243,13 +245,15 @@ body {
   font-style: italic;
   margin: 0;
   padding-left: 15px;
-  border-left: 3px solid var(--border);
+  border-left: 4px solid var(--border);
+  font-weight: 500;
 }
 
 .card-footer {
   margin-top: 40px;
   text-align: center;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 500;
   color: var(--text-muted);
   padding-top: 20px;
   border-top: 1px solid var(--border);
@@ -259,13 +263,14 @@ body {
 .alert-box {
   background: #fef2f2;
   border: 1px solid #fecaca;
-  color: #b91c1c;
+  color: #991b1b;
   padding: 20px;
   border-radius: 12px;
   display: flex;
   align-items: center;
   gap: 10px;
-  font-weight: 500;
+  font-weight: 600;
+  margin-top: 20px;
 }
 
 /* --- Animations --- */
