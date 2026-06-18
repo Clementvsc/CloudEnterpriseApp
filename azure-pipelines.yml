@@ -1,101 +1,105 @@
 trigger:
-  branches:
-    include:
-      - main
-
-pool:
-  vmImage: 'ubuntu-latest'
+- main
 
 variables:
-  azureSubscription: 'azure-service-connection' 
-  buildConfiguration: 'Release'
-  dotNetVersion: '8.x'
-  nodeVersion: '20.x'
-  appNameDev: 'webapp-dev-2468'
-  appNameStaging: 'webapp-staging-2468'
-  appNameProd: 'webapp-prod-2468'
+  azureSubscription: 'azure-service-connection'
+  webAppNameDev: 'webapp-dev-2468'
+  webAppNameStaging: 'webapp-staging-2468'
+  webAppNameProd: 'webapp-prod-2468'
 
 stages:
-- stage: BuildAndTest
-  displayName: 'CI: Build & Test'
+- stage: Build
+  displayName: 'Continuous Integration (CI)'
   jobs:
-  - job: CompileAll
+  - job: BuildFullStack
+    pool:
+      vmImage: 'ubuntu-latest'
     steps:
     - task: NodeTool@0
-      inputs: { versionSpec: '$(nodeVersion)' }
-
+      inputs:
+        versionSpec: '18.x'
     - script: |
         npm install
         npm run build
       workingDirectory: 'frontend-react'
-      displayName: 'Compile React'
+      displayName: 'Compile React SPA'
 
-    - task: UseDotNet@2
-      inputs: { version: '$(dotNetVersion)' }
-
-
-    - script: dotnet restore CloudEnterpriseApp.Web/CloudEnterpriseApp.Web.csproj
-      displayName: 'Restore Backend'
-
-    - script: dotnet build CloudEnterpriseApp.Web/CloudEnterpriseApp.Web.csproj --configuration $(buildConfiguration) --no-restore
-      displayName: 'Build Backend'
-
-    - script: |
-        mkdir -p CloudEnterpriseApp.Web/wwwroot
-        cp -r frontend-react/dist/* CloudEnterpriseApp.Web/wwwroot/
-      displayName: 'Merge Frontend'
-
-    - script: dotnet publish CloudEnterpriseApp.Web/CloudEnterpriseApp.Web.csproj --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)
-      displayName: 'Publish'
-
-    - task: PublishPipelineArtifact@1
+    - task: DotNetCoreCLI@2
       inputs:
-        targetPath: '$(Build.ArtifactStagingDirectory)'
-        artifact: 'drop'
+        command: 'test'
+        projects: '**/*Tests/*.csproj'
+        arguments: '--configuration Release'
+      displayName: 'Run Unit Tests (xUnit)'
+
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'publish'
+        publishWebProjects: true
+        arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)/drop'
+      displayName: 'Publish .NET Backend'
+
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: 'frontend-react/dist'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)/drop/wwwroot'
+      displayName: 'Merge React into .NET wwwroot'
+
+    - publish: '$(Build.ArtifactStagingDirectory)/drop'
+      artifact: drop
 
 - stage: DeployDev
-  dependsOn: BuildAndTest
+  displayName: 'Deploy to Development'
+  dependsOn: Build
   jobs:
-  - deployment: Dev
+  - deployment: Deploy
     environment: 'Development'
+    pool:
+      vmImage: 'ubuntu-latest'
     strategy:
       runOnce:
         deploy:
           steps:
           - task: AzureWebApp@1
             inputs:
-              azureSubscription: '$(azureSubscription)'
+              azureSubscription: $(azureSubscription)
               appType: 'webAppLinux'
-              appName: '$(appNameDev)'
+              appName: $(webAppNameDev)
               package: '$(Pipeline.Workspace)/drop'
+
 - stage: DeployStaging
+  displayName: 'Deploy to Staging'
   dependsOn: DeployDev
   jobs:
-  - deployment: Staging
+  - deployment: Deploy
     environment: 'Staging'
+    pool:
+      vmImage: 'ubuntu-latest'
     strategy:
       runOnce:
         deploy:
           steps:
           - task: AzureWebApp@1
             inputs:
-              azureSubscription: '$(azureSubscription)'
+              azureSubscription: $(azureSubscription)
               appType: 'webAppLinux'
-              appName: '$(appNameStaging)'
+              appName: $(webAppNameStaging)
               package: '$(Pipeline.Workspace)/drop'
 
 - stage: DeployProd
+  displayName: 'Deploy to Production (GATED)'
   dependsOn: DeployStaging
   jobs:
-  - deployment: Production
+  - deployment: Deploy
     environment: 'Production'
+    pool:
+      vmImage: 'ubuntu-latest'
     strategy:
       runOnce:
         deploy:
           steps:
           - task: AzureWebApp@1
             inputs:
-              azureSubscription: '$(azureSubscription)'
+              azureSubscription: $(azureSubscription)
               appType: 'webAppLinux'
-              appName: '$(appNameProd)'
+              appName: $(webAppNameProd)
               package: '$(Pipeline.Workspace)/drop'

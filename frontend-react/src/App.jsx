@@ -1,5 +1,66 @@
 import React, { useState } from 'react';
-import './App.css';
+
+const styles = `
+:root {
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --bg-gradient: linear-gradient(135deg, #e2e8f0 0%, #c7d2fe 100%);
+  --card-bg: rgba(255, 255, 255, 1);
+  --text-main: #020617;
+  --text-muted: #334155;
+  --border: #cbd5e1;
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-gradient);
+  color: var(--text-main);
+  overflow-x: hidden;
+}
+.app-layout { position: relative; min-height: 100vh; display: flex; justify-content: center; padding: 0 20px 60px 20px; }
+.main-container { width: 100%; max-width: 750px; z-index: 1; }
+.sticky-header {
+  position: sticky; top: 0; background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(12px);
+  z-index: 50; padding: 40px 20px 20px 20px; margin: 0 -20px 30px -20px; border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+.header-section { text-align: center; margin-bottom: 30px; }
+.badge { display: inline-block; background: #dcfce7; color: #166534; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; margin-bottom: 15px; }
+.header-section h1 { font-size: 3rem; font-weight: 800; margin: 0 0 10px 0; color: #0f172a; }
+.header-section p { color: var(--text-muted); font-size: 1.1rem; font-weight: 500; margin: 0; }
+.search-bar-wrapper { display: flex; gap: 12px; background: white; padding: 10px; border-radius: 16px; box-shadow: var(--shadow-sm); border: 2px solid var(--border); transition: all 0.3s ease; }
+.search-bar-wrapper:focus-within { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15); }
+.search-input { flex-grow: 1; border: none; background: transparent; padding: 12px 20px; font-size: 1.1rem; outline: none; color: var(--text-main); font-weight: 500; }
+.search-button { background: var(--primary); color: white; border: none; padding: 0 30px; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s ease, transform 0.1s ease; min-width: 120px; display: flex; justify-content: center; align-items: center; }
+.search-button:hover:not(:disabled) { background: var(--primary-hover); }
+.search-button:active:not(:disabled) { transform: scale(0.97); }
+.search-button:disabled { opacity: 0.8; cursor: not-allowed; }
+.spinner { width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite; }
+.results-card { background: var(--card-bg); border-radius: 24px; padding: 40px; box-shadow: var(--shadow-lg); border: 1px solid var(--border); }
+.word-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 20px; margin-bottom: 30px; }
+.title-group h2 { font-size: 3rem; margin: 0 0 5px 0; text-transform: capitalize; color: #0f172a; }
+.phonetic { color: var(--primary); font-family: 'JetBrains Mono', 'Courier New', monospace; font-size: 1.2rem; font-weight: 600; }
+.audio-button { background: #f1f5f9; border: 1px solid var(--border); padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: 700; color: var(--text-main); transition: all 0.2s ease; }
+.audio-button:hover { background: #e2e8f0; transform: translateY(-2px); }
+.meaning-block { margin-bottom: 35px; animation: slideUp 0.5s ease-out forwards; opacity: 0; }
+.pos-badge { display: inline-block; background: #1e293b; color: white; padding: 6px 16px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; margin-bottom: 15px; text-transform: capitalize; }
+.definitions { margin: 0; padding-left: 20px; color: var(--text-main); }
+.definitions li { margin-bottom: 20px; padding-left: 10px; }
+.definitions li::marker { color: var(--primary); font-weight: 800; }
+.def-text { font-size: 1.15rem; line-height: 1.6; margin: 0 0 8px 0; font-weight: 500; }
+.def-example { color: var(--text-muted); font-style: italic; margin: 0; padding-left: 15px; border-left: 4px solid var(--border); font-weight: 500; }
+.card-footer { margin-top: 40px; text-align: center; font-size: 0.9rem; font-weight: 500; color: var(--text-muted); padding-top: 20px; border-top: 1px solid var(--border); }
+.alert-box { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 20px; border-radius: 12px; display: flex; align-items: center; gap: 10px; font-weight: 600; margin-top: 20px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.fade-in { animation: fadeIn 0.8s ease-out forwards; }
+.fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
+.slide-up { animation: slideUp 0.5s ease-out forwards; }
+`;
 
 export default function DictionaryApp() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -39,87 +100,78 @@ export default function DictionaryApp() {
   };
 
   const audioUrl = wordData?.phonetics?.find(p => p.audio && p.audio.length > 0)?.audio;
-
-  const playAudio = () => {
-    if (audioUrl) {
-      new Audio(audioUrl).play();
-    }
-  };
+  const playAudio = () => { if (audioUrl) { new Audio(audioUrl).play(); } };
 
   return (
-    <div className="app-layout">
-      <div className="main-container">
-        
-        {/* NEW: Sticky Header Wrapper */}
-        <div className="sticky-header">
-          <header className="header-section fade-in">
-            <div className="badge">Production Environment</div>
-            <h1>Lexicon API</h1>
-            <p>Enterprise vocabulary routing and resolution.</p>
-          </header>
+    <>
+      <style>{styles}</style>
+      <div className="app-layout">
+        <div className="main-container">
+          <div className="sticky-header">
+            <header className="header-section fade-in">
+              <div className="badge">Production Environment</div>
+              <h1>Lexicon API</h1>
+              <p>Enterprise vocabulary routing and resolution.</p>
+            </header>
 
-          <form onSubmit={handleSearch} className="search-bar-wrapper fade-in-up">
-            <input 
-              type="text" 
-              placeholder="Search for a cloud concept, IT term, or any word..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
-              autoComplete="off"
-            />
-            <button type="submit" className={`search-button ${loading ? 'loading-btn' : ''}`} disabled={loading}>
-              {loading ? <span className="spinner"></span> : "Search"}
-            </button>
-          </form>
+            <form onSubmit={handleSearch} className="search-bar-wrapper fade-in-up">
+              <input 
+                type="text" 
+                placeholder="Search for a cloud concept, IT term, or any word..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="search-input"
+                autoComplete="off"
+              />
+              <button type="submit" className={`search-button ${loading ? 'loading-btn' : ''}`} disabled={loading}>
+                {loading ? <span className="spinner"></span> : "Search"}
+              </button>
+            </form>
 
-          {/* Error State moved into sticky area so it remains visible */}
-          {errorStatus && (
-            <div className="alert-box error fade-in-up">
-              <span className="icon">⚠️</span> {errorStatus}
+            {errorStatus && (
+              <div className="alert-box error fade-in-up">
+                <span className="icon">⚠️</span> {errorStatus}
+              </div>
+            )}
+          </div>
+
+          {!loading && !errorStatus && wordData && (
+            <div className="results-card slide-up">
+              <div className="word-header">
+                <div className="title-group">
+                  <h2>{wordData.word}</h2>
+                  {wordData.phonetic && <span className="phonetic">{wordData.phonetic}</span>}
+                </div>
+                {audioUrl && (
+                  <button onClick={playAudio} className="audio-button" title="Play pronunciation">🔊 Listen</button>
+                )}
+              </div>
+              
+              <div className="meanings-list">
+                {wordData.meanings.map((meaning, index) => (
+                  <div key={index} className="meaning-block" style={{ animationDelay: `${index * 0.1}s` }}>
+                    <div className="part-of-speech">
+                      <span className="pos-badge">{meaning.partOfSpeech}</span>
+                    </div>
+                    <ol className="definitions">
+                      {meaning.definitions.slice(0, 3).map((def, dIndex) => (
+                        <li key={dIndex}>
+                          <p className="def-text">{def.definition}</p>
+                          {def.example && <p className="def-example">"{def.example}"</p>}
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="card-footer">
+                <p>Data provided by The Free Dictionary API via .NET Proxy</p>
+              </div>
             </div>
           )}
         </div>
-
-        {/* Results State (Scrolls under the sticky header) */}
-        {!loading && !errorStatus && wordData && (
-          <div className="results-card slide-up">
-            <div className="word-header">
-              <div className="title-group">
-                <h2>{wordData.word}</h2>
-                {wordData.phonetic && <span className="phonetic">{wordData.phonetic}</span>}
-              </div>
-              
-              {audioUrl && (
-                <button onClick={playAudio} className="audio-button" title="Play pronunciation">
-                  🔊 Listen
-                </button>
-              )}
-            </div>
-            
-            <div className="meanings-list">
-              {wordData.meanings.map((meaning, index) => (
-                <div key={index} className="meaning-block" style={{ animationDelay: `${index * 0.1}s` }}>
-                  <div className="part-of-speech">
-                    <span className="pos-badge">{meaning.partOfSpeech}</span>
-                  </div>
-                  <ol className="definitions">
-                    {meaning.definitions.slice(0, 3).map((def, dIndex) => (
-                      <li key={dIndex}>
-                        <p className="def-text">{def.definition}</p>
-                        {def.example && <p className="def-example">"{def.example}"</p>}
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              ))}
-            </div>
-            
-            <div className="card-footer">
-              <p>Data provided by The Free Dictionary API via .NET Proxy</p>
-            </div>
-          </div>
-        )}
       </div>
-    </div>
+    </>
   );
 }
