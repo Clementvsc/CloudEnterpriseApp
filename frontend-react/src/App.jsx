@@ -1,101 +1,96 @@
-import React, { useState, useEffect } from 'react';
-import './App.css'; // Make sure you import the stylesheet
+import React, { useState } from 'react';
+import './App.css';
 
 export default function DictionaryApp() {
-  const [words, setWords] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [wordData, setWordData] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [errorStatus, setErrorStatus] = useState(null);
 
-  // FETCH DATA: Connects to the .NET Backend
-  useEffect(() => {
-    // Replace '/api/dictionary' with your actual .NET endpoint route if different!
-    fetch('/api/dictionary') 
-      .then(async response => {
-        if (!response.ok) {
-          throw new Error(`Backend Connection Failed (HTTP ${response.status})`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        // Defensive Check: Ensure we received an array before attempting to sort/render
-        if (Array.isArray(data)) {
-          // Sort words alphabetically immediately
-          const sortedData = data.sort((a, b) => {
-            const wordA = (a.word || '').toLowerCase();
-            const wordB = (b.word || '').toLowerCase();
-            return wordA.localeCompare(wordB);
-          });
-          setWords(sortedData);
-        } else {
-          console.error("⛔ ERROR: Backend sent non-array data:", data);
-          setWords([]);
-          setErrorStatus("Data Contract Mismatch. Backend must send an array.");
-        }
-        setLoading(false);
-      })
-      .catch(error => {
-        console.error("⛔ API CONNECTION ERROR:", error);
-        setErrorStatus(error.message);
-        setLoading(false);
-      });
-  }, []);
+  // Triggered when the user clicks Search or presses Enter
+  const handleSearch = async (e) => {
+    e?.preventDefault();
+    if (!searchTerm.trim()) return;
 
-  // FILTER LOGIC: Live search that handles object formatting [{word: "..."}]
-  const filteredWords = words.filter(item => {
-    const textToSearch = item?.word || '';
-    return textToSearch.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+    setLoading(true);
+    setErrorStatus(null);
+    setWordData(null);
+
+    try {
+      // Call our .NET proxy endpoint with the requested word
+      const response = await fetch(`/api/dictionary/${encodeURIComponent(searchTerm)}`);
+      
+      if (response.status === 404) {
+        throw new Error(`Word '${searchTerm}' not found in the live dictionary.`);
+      }
+      if (!response.ok) {
+        throw new Error(`Backend Connection Failed (HTTP ${response.status})`);
+      }
+
+      const data = await response.json();
+      // The public API returns an array, we grab the first detailed entry
+      if (Array.isArray(data) && data.length > 0) {
+        setWordData(data[0]);
+      } else {
+        throw new Error("Invalid data structure received.");
+      }
+    } catch (error) {
+      console.error("API Error:", error);
+      setErrorStatus(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="app-container">
       <header className="app-header">
-        <h1>Enterprise Dictionary API</h1>
-        <p className="environment-label">Target: webapp-prod-2468 (South India Cluster)</p>
+        <h1>Global Dictionary Search</h1>
+        <p className="environment-label">Connected via .NET Live Proxy</p>
       </header>
 
       <main className="main-content">
-        <div className="search-container">
+        {/* Search Form */}
+        <form onSubmit={handleSearch} className="search-container" style={{ display: 'flex', gap: '10px' }}>
           <input 
             type="text" 
-            placeholder="Search dictionary for a specific word..." 
+            placeholder="Type any word in the English language..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
+            style={{ margin: 0, flexGrow: 1 }}
           />
-        </div>
+          <button type="submit" disabled={loading} style={{ padding: '0 20px', borderRadius: '10px', cursor: 'pointer' }}>
+            {loading ? "Searching..." : "Search"}
+          </button>
+        </form>
 
-        {/* LOADING & ERROR BANNERS */}
-        {loading && <div className="status-banner loading"> Connecting to .NET Backend...</div>}
-        
+        {/* Error State */}
         {errorStatus && (
-          <div className="status-banner error">
-            <strong>Deployment Success, Integration Error:</strong> <br/>
-            {errorStatus} <br/>
-            Check your .NET Controller return type and endpoint routing.
+          <div className="status-banner error" style={{ borderLeft: '5px solid #ef4444', backgroundColor: '#fee2e2', padding: '15px' }}>
+            {errorStatus}
           </div>
         )}
 
-        {/* DATA GRID */}
-        {!loading && !errorStatus && (
-          <div className="grid-container">
-            {filteredWords.map((item, index) => (
-              <div key={index} className="word-card">
-                <div className="word-header">
-                  <h3>{item.word || "Unknown Word"}</h3>
-                  <span className="part-of-speech">{item.partOfSpeech || "n."}</span>
-                </div>
-                <p className="definition">{item.definition || "No definition provided."}</p>
-                <div className="card-footer">
-                  <span className="source">Source: Enterprise API</span>
-                </div>
+        {/* Live Data Display */}
+        {!loading && !errorStatus && wordData && (
+          <div className="word-card" style={{ padding: '30px', backgroundColor: 'white', borderRadius: '15px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+            <div className="word-header" style={{ borderBottom: '1px solid #eee', paddingBottom: '15px', marginBottom: '15px' }}>
+              <h2 style={{ fontSize: '2.5rem', margin: 0, textTransform: 'capitalize' }}>{wordData.word}</h2>
+              {wordData.phonetic && <span style={{ color: '#666', fontFamily: 'monospace' }}>{wordData.phonetic}</span>}
+            </div>
+            
+            {wordData.meanings.map((meaning, index) => (
+              <div key={index} style={{ marginBottom: '20px' }}>
+                <h4 style={{ color: '#3b82f6', textTransform: 'uppercase', fontSize: '0.9rem' }}>{meaning.partOfSpeech}</h4>
+                <ul style={{ paddingLeft: '20px', margin: '10px 0' }}>
+                  {meaning.definitions.slice(0, 3).map((def, dIndex) => (
+                    <li key={dIndex} style={{ marginBottom: '8px', lineHeight: '1.5' }}>{def.definition}</li>
+                  ))}
+                </ul>
               </div>
             ))}
           </div>
-        )}
-        
-        {!loading && !errorStatus && filteredWords.length === 0 && (
-          <div className="status-banner info"> No words match your current search criteria.</div>
         )}
       </main>
     </div>
