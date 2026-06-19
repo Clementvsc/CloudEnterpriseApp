@@ -109,4 +109,4 @@ stages:
               azureSubscription: $(azureSubscription)
               appType: 'webAppLinux'
               appName: $(webAppNameProd)
-              package: '$(Pipeline.Workspace)/drop'
+              package: '$(Pipeline.Workspace)/drop' 

@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudenterpriseapp-deployment
+  namespace: containerapp-dev
+  labels:
+    app: cloudenterpriseapp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cloudenterpriseapp
+  template:
+    metadata:
+      labels:
+        app: cloudenterpriseapp
+    spec:
+      containers:
+      - name: cloudenterpriseapp
+        image: containerappacr7051.azurecr.io/cloudenterpriseapp:v1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudenterpriseapp-service
+  namespace: containerapp-dev
+spec:
+  type: LoadBalancer
+  selector:
+    app: cloudenterpriseapp
+  ports:
+  - port: 80
+    targetPort: 80
